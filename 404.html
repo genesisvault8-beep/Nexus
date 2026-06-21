@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>404 — NEXUS</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --void:#03040a;
+  --surface:#08091a;
+  --border:#141428;
+  --border2:#1e1e3e;
+  --text:#e8e8f8;
+  --muted2:#5e5e8e;
+  --accent:#7c3aed;
+  --accent2:#00f5c4;
+  --accent3:#ff6b6b;
+}
+html,body{
+  width:100%;height:100%;background:var(--void);color:var(--text);
+  font-family:'Space Grotesk',sans-serif;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;position:relative;
+}
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(124,58,237,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(124,58,237,0.04) 1px, transparent 1px);
+  background-size:40px 40px;
+  pointer-events:none;
+}
+.wrap{text-align:center;padding:32px;position:relative;z-index:1;max-width:420px}
+.glyph{
+  font-size:64px;margin-bottom:20px;opacity:.25;
+  font-family:'JetBrains Mono',monospace;
+  color:var(--accent3);
+}
+.code{
+  font-family:'JetBrains Mono',monospace;
+  font-size:13px;letter-spacing:4px;color:var(--muted2);
+  margin-bottom:14px;
+}
+h1{
+  font-size:26px;font-weight:700;margin-bottom:10px;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+p{
+  font-size:13px;color:var(--muted2);line-height:1.7;margin-bottom:28px;
+}
+.btn{
+  display:inline-block;padding:12px 24px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border-radius:10px;color:var(--void);
+  font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;
+  text-decoration:none;transition:opacity .2s,transform .15s;
+}
+.btn:active{opacity:.85;transform:scale(.98)}
+.foot{
+  font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;
+  color:var(--muted2);opacity:.5;margin-top:32px;
+}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="glyph">◈</div>
+    <div class="code">ERROR // 404</div>
+    <h1>NODE NOT FOUND</h1>
+    <p>This path doesn't exist in the graph.<br>The page you're looking for has been moved, deleted, or never existed.</p>
+    <a class="btn" href="/">← Back to NEXUS</a>
+    <div class="foot">GENESIS GROUP // NEXUS</div>
+  </div>
+</body>
+</html>
