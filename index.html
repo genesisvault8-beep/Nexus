@@ -436,7 +436,7 @@ let modalDoc = null;
 // ── INIT ──
 async function init() {
   await initDB();
-  apiUrl = localStorage.getItem('nexus_api') || '';
+  apiUrl = localStorage.getItem('nexus_api') || 'https://empty-sea-62ef.johnokey868.workers.dev';
   document.getElementById('apiUrl').value = apiUrl;
   allDocs = await dbAll();
   updateAll();
@@ -531,7 +531,7 @@ async function uploadToServer(id, name, desc, html) {
 
     const res = await fetch(`${apiUrl}/upload`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'X-Nexus-Key': 'genesis-nexus-2026' },
       body: JSON.stringify({ id, name, desc, type: selectedType, html })
     });
 
