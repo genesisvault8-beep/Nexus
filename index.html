@@ -432,17 +432,27 @@ let canvas, ctx, W, H;
 let scrollX=0, scrollY=0, breathPhase=0, animFrame=null;
 let layoutCache = {};
 let modalDoc = null;
+let nexusKey = sessionStorage.getItem('nexus_key') || '';
+
+function getNexusKey() {
+  if (nexusKey) return nexusKey;
+  const entered = prompt('Enter your NEXUS host password:');
+  if (entered) {
+    nexusKey = entered;
+    sessionStorage.setItem('nexus_key', entered);
+  }
+  return nexusKey;
+}
 
 // ── INIT ──
 async function init() {
   await initDB();
   apiUrl = localStorage.getItem('nexus_api') || 'https://empty-sea-62ef.johnokey868.workers.dev';
   document.getElementById('apiUrl').value = apiUrl;
-  allDocs = await dbAll();
-  updateAll();
   setupCanvas();
   window.addEventListener('resize', () => { if(currentTab==='graph') setupCanvas(); });
   if (apiUrl) checkConnection();
+  await refresh();
 }
 
 // ── TABS ──
@@ -529,11 +539,20 @@ async function uploadToServer(id, name, desc, html) {
     bar.style.width = '50%';
     status.textContent = 'Uploading...';
 
+    const key = getNexusKey();
+    if (!key) { toast('Password required to host'); progress.style.display='none'; return; }
+
     const res = await fetch(`${apiUrl}/upload`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Nexus-Key': 'genesis-nexus-2026' },
+      headers: { 'Content-Type': 'application/json', 'X-Nexus-Key': key },
       body: JSON.stringify({ id, name, desc, type: selectedType, html })
     });
+
+    if (res.status === 401) {
+      sessionStorage.removeItem('nexus_key');
+      nexusKey = '';
+      throw new Error('Wrong password — try again');
+    }
 
     if (!res.ok) throw new Error(`Server error: ${res.status}`);
     const data = await res.json();
@@ -658,8 +677,7 @@ function closeViewer() {
   document.getElementById('viewerScreen').classList.add('hidden');
   document.getElementById('mainScreen').classList.remove('hidden');
   currentViewDoc = null;
-  allDocs = [];
-  dbAll().then(d => { allDocs=d; renderDocs(); });
+  refresh();
 }
 
 function copyUrl() {
@@ -690,6 +708,26 @@ function closeModal() { document.getElementById('addrModal').classList.remove('o
 // ── DELETE ──
 async function deleteDoc(id) {
   if (!confirm('Remove from NEXUS?')) return;
+  const doc = allDocs.find(d => d.id === id);
+
+  if (doc && doc.hosted && apiUrl) {
+    const key = getNexusKey();
+    if (!key) { toast('Password required to delete hosted file'); return; }
+    try {
+      const res = await fetch(`${apiUrl}/f/${id}`, {
+        method: 'DELETE',
+        headers: { 'X-Nexus-Key': key }
+      });
+      if (res.status === 401) {
+        sessionStorage.removeItem('nexus_key');
+        nexusKey = '';
+        toast('Wrong password');
+        return;
+      }
+      if (!res.ok) { toast('Failed to delete from server'); return; }
+    } catch(e) { toast('Cannot reach server'); return; }
+  }
+
   await dbDel(id);
   await refresh();
   toast('Removed');
@@ -853,7 +891,29 @@ function tapGraph(cx,cy) {
 
 // ── UTILS ──
 async function refresh() {
-  allDocs = await dbAll();
+  const localDocs = await dbAll();
+  let remoteDocs = [];
+
+  if (apiUrl) {
+    try {
+      const res = await fetch(`${apiUrl}/files`);
+      if (res.ok) {
+        const files = await res.json();
+        remoteDocs = files.map(f => ({
+          id: f.id, name: f.name, desc: f.desc || '',
+          type: f.type || 'tool', size: f.size, timestamp: f.ts,
+          hosted: true, publicUrl: `${apiUrl}/f/${f.id}`, views: f.views || 0
+        }));
+      }
+    } catch(e) { /* offline — fall back to local only */ }
+  }
+
+  // merge: remote (Turso) is source of truth for hosted docs.
+  // local-only drafts (not yet hosted) are kept from IndexedDB.
+  const remoteIds = new Set(remoteDocs.map(d => d.id));
+  const localOnly = localDocs.filter(d => !d.hosted && !remoteIds.has(d.id));
+  allDocs = [...remoteDocs, ...localOnly];
+
   updateAll();
 }
 
